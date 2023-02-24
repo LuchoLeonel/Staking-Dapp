@@ -7,14 +7,14 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const { deployer } = await getNamedAccounts();
   const chianId = await getChainId();
 
-  await deploy("ExampleExternalContract", {
+  await deploy("ExternalContract", {
     // Learn more about args here: https://www.npmjs.com/package/hardhat-deploy#deploymentsdeploy
     from: deployer,
     // args: [ "Hello", ethers.utils.parseEther("1.5") ],
     log: true,
   });
 
-  const exampleExternalContract = await ethers.getContract("ExampleExternalContract");
+  const externalContract = await ethers.getContract("ExternalContract");
 
   // Getting a previously deployed contract
   // const ExampleExternalContract = await ethers.getContract(
@@ -67,4 +67,4 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 //   return new Promise((resolve) => setTimeout(resolve, ms));
 // }
 
-module.exports.tags = ["ExampleExternalContract"];
+module.exports.tags = ["ExternalContract"];
