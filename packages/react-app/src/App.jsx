@@ -302,6 +302,11 @@ function App(props) {
     );
   }
 
+  const handleStake = () => {
+    tx(writeContracts.Staker.stake({ value: ethers.utils.parseEther("0.5") }));
+    setEthToStake("");
+  }
+
   /*
   const addressFromENS = useResolveName(mainnetProvider, "austingriffith.eth");
   console.log("🏷 Resolved austingriffith.eth as:", addressFromENS)
