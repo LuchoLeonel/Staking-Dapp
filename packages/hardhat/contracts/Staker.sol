@@ -48,7 +48,7 @@ contract Staker {
   Requires that the contract only be completed once!
   */
   modifier notCompleted() {
-    bool completed = externalContract.completed();
+    bool completed = externalContract.completed(msg.sender);
     require(!completed, "Stake already completed!");
     _;
   }
@@ -57,7 +57,7 @@ contract Staker {
   Requires the contract to be completed
   */
   modifier completed() {
-    bool completed = externalContract.completed();
+    bool completed = externalContract.completed(msg.sender);
     require(completed, "Stake is not completed!");
     _;
   }
@@ -92,7 +92,7 @@ contract Staker {
   past the defined withdrawal period
   */
   function execute() public isClaimPeriod notCompleted {
-    externalContract.complete{value: address(this).balance}();
+    externalContract.complete{value: address(this).balance}(msg.sender);
   }
 
 
@@ -101,7 +101,7 @@ contract Staker {
   past the defined withdrawal period
   */
   function rescue() public completed {
-    externalContract.getBack();
+    externalContract.getBack(msg.sender);
   }
 
   /*
