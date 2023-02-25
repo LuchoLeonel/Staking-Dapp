@@ -1,7 +1,7 @@
 import WalletConnectProvider from "@walletconnect/web3-provider";
 //import Torus from "@toruslabs/torus-embed"
 import WalletLink from "walletlink";
-import { Alert, Button, Col, Menu, Row, List, Divider } from "antd";
+import { Alert, Button, Col, Menu, Row, List, Divider, Input, Tooltip } from "antd";
 import "antd/dist/antd.css";
 import React, { useCallback, useEffect, useState } from "react";
 import { BrowserRouter, Link, Route, Switch } from "react-router-dom";
@@ -167,8 +167,7 @@ function App(props) {
       : mainnetInfura;
 
   const [injectedProvider, setInjectedProvider] = useState();
-  const [withdraw, setWithdraw] = useState();
-  const [claim, setClaim] = useState();
+  const [ethToStake, setEthToStake] = useState();
   const [address, setAddress] = useState();
 
   const logoutOfWeb3Modal = async () => {
@@ -301,6 +300,11 @@ function App(props) {
         <Balance balance={externalContractBalance} fontSize={32} /> ETH locked!
       </div>
     );
+  }
+
+  const handleStake = () => {
+    tx(writeContracts.Staker.stake({ value: ethers.utils.parseEther("0.5") }));
+    setEthToStake("");
   }
 
   /*
@@ -618,6 +622,21 @@ function App(props) {
               </Button>
             </div>
 
+
+            <div style={{ padding: 3, width: 300, m: "auto" }}>
+            <Input
+              placeholder={"Stake ETH"}
+              value={ethToStake}
+              onChange={e => setEthToStake(e.target.value)}
+              suffix={
+                <Tooltip title="Stake ETH">
+                  <Button
+                    onClick={handleStake}
+                  >🥩 Stake</Button>
+                </Tooltip>
+              }
+            />
+            </div>
             <div style={{ padding: 3 }}>
               <Button
                 type={
