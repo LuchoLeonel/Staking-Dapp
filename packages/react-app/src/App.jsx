@@ -172,6 +172,8 @@ function App(props) {
       : mainnetInfura;
 
   const [injectedProvider, setInjectedProvider] = useState();
+  const [withdraw, setWithdraw] = useState();
+  const [claim, setClaim] = useState();
   const [address, setAddress] = useState();
 
   const logoutOfWeb3Modal = async () => {
@@ -264,10 +266,10 @@ function App(props) {
   console.log("💸 balanceStaked:", balanceStaked);
 
   // ** 📟 Listen for broadcast events
-  const stakeEvents = useEventListener(readContracts, "Staker", "Stake", localProvider, 1);
+  const stakeEvents = useEventListener(readContracts, "Staker", "Stake", localProvider);
   console.log("📟 stake events:", stakeEvents);
 
-  const receiveEvents = useEventListener(readContracts, "Staker", "Received", localProvider, 1);
+  const receiveEvents = useEventListener(readContracts, "Staker", "Received", localProvider);
   console.log("📟 receive events:", receiveEvents);
 
   // ** keep track of a variable from the contract in the local React state:
@@ -278,8 +280,11 @@ function App(props) {
   console.log("⏳ Withdrawal Time Left:", withdrawPeriodLeft);
 
   // ** Listen for when the contract has been 'completed'
-  const complete = useContractReader(readContracts, "ExternalContract", "completed");
+  const complete = useContractReader(readContracts, "ExternalContract", "completed", [address]);
   console.log("✅ complete:", complete);
+
+  const rescued = useContractReader(readContracts, "ExternalContract", "rescued", [address]);
+  console.log("✅ rescued:", rescued);
 
   const externalContractBalance = useBalance(
     localProvider,
@@ -338,6 +343,13 @@ function App(props) {
     readContracts,
     writeContracts,
     mainnetContracts,
+    withdrawPeriodLeft,
+    claimPeriodLeft,
+    balanceStaked,
+    complete,
+    rescued,
+    withdraw,
+    claim,
   ]);
 
   let networkDisplay = "";
@@ -520,14 +532,14 @@ function App(props) {
           <Route exact path="/">
             {completeDisplay}
 
-            <div style={{ padding: 8, marginTop: 16 }}>
+            <div style={{ padding: 3, marginTop: 2 }}>
               <div>Staker Contract:</div>
               <Address value={readContracts && readContracts.Staker && readContracts.Staker.address} />
             </div>
 
             <Divider />
 
-            <div style={{ padding: 8, marginTop: 16 }}>
+            <div style={{ padding: 3 }}>
               <div>Reward Rate Per Second:</div>
               <Balance balance={rewardRatePerSecond} fontSize={64} /> ETH
             </div>
@@ -536,7 +548,7 @@ function App(props) {
 
             {((withdrawPeriodLeft && withdrawPeriodLeft.toNumber() == 0 && claimPeriodLeft && claimPeriodLeft.toNumber() > 0 && balanceStakedFloat != 0.0)) &&
               <>
-                <div style={{ padding: 8, marginTop: 16, fontWeight: "bold" }}>
+                <div style={{ padding: 3, fontWeight: "bold" }}>
                   <div>Left for Claim Period:</div>
                   {(balanceStakedFloat != 0.0 && claimPeriodLeft) ? (humanizeDuration(claimPeriodLeft.toNumber() * 1000)) : "Not staking yet"}
                 </div>
@@ -545,26 +557,26 @@ function App(props) {
 
             {(withdrawPeriodLeft && withdrawPeriodLeft.toNumber() > 0 && balanceStakedFloat != 0.0) &&
               <>
-                <div style={{ padding: 8, marginTop: 16, fontWeight: "bold"}}>
+                <div style={{ padding: 3, fontWeight: "bold"}}>
                   <div>Left for Withdraw Period:</div>
                   {(balanceStakedFloat != 0.0 && withdrawPeriodLeft) ? (humanizeDuration(withdrawPeriodLeft.toNumber() * 1000)) : "Not staking yet"}
                 </div>
                 <Divider />
             </>}
 
-            <div style={{ padding: 8, fontWeight: "bold"}}>
+            <div style={{ padding: 3, fontWeight: "bold"}}>
               <div>Total Available ETH in Contract:</div>
               <Balance balance={stakerContractBalance} fontSize={64} />
             </div>
 
             <Divider />
 
-            <div style={{ padding: 8,fontWeight: "bold" }}>
+            <div style={{ padding: 3, fontWeight: "bold" }}>
               <div>My ETH Locked 🔒 in Staker Contract:</div>
               <Balance balance={balanceStaked} fontSize={64} />
             </div>
 
-            <div style={{ padding: 8 }}>
+            <div style={{ padding: 3 }}>
               <Button
                 type={complete ? "primary" : "success"}
                 onClick={() => {
@@ -575,10 +587,15 @@ function App(props) {
               </Button>
             </div>
 
-            <div style={{ padding: 8 }}>
+            <div style={{ padding: 3 }}>
               <Button
                 type={
-                  (withdrawPeriodLeft && withdrawPeriodLeft.toNumber() == 0 && claimPeriodLeft && claimPeriodLeft.toNumber() == 0 && !complete && balanceStakedFloat != 0.0)
+                  (
+                    withdrawPeriodLeft && withdrawPeriodLeft.toNumber() == 0
+                    && claimPeriodLeft && claimPeriodLeft.toNumber() == 0
+                    && !complete
+                    && balanceStakedFloat != 0.0
+                   )
                   ? "primary"
                   : "success"
                 }
@@ -590,7 +607,7 @@ function App(props) {
               </Button>
             </div>
 
-            <div style={{ padding: 8 }}>
+            <div style={{ padding: 3 }}>
               <Button
                 type={
                   (withdrawPeriodLeft && withdrawPeriodLeft.toNumber() == 0 && claimPeriodLeft && claimPeriodLeft.toNumber() > 0 && balanceStakedFloat != 0.0)
@@ -605,9 +622,13 @@ function App(props) {
               </Button>
             </div>
 
-            <div style={{ padding: 8 }}>
+            <div style={{ padding: 3 }}>
               <Button
-                type={balanceStakedFloat != 0.0 ? "success" : "primary"}
+                type={
+                  balanceStakedFloat == 0.0
+                  ? "primary" : rescued && withdrawPeriodLeft && withdrawPeriodLeft.toNumber() == 0
+                  ? "primary" : "success"
+                }
                 onClick={() => {
                   tx(writeContracts.Staker.stake({ value: ethers.utils.parseEther("0.5") }));
                 }}
