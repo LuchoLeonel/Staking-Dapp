@@ -167,6 +167,8 @@ function App(props) {
       : mainnetInfura;
 
   const [injectedProvider, setInjectedProvider] = useState();
+  const [withdraw, setWithdraw] = useState();
+  const [claim, setClaim] = useState();
   const [address, setAddress] = useState();
 
   const logoutOfWeb3Modal = async () => {
